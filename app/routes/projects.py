@@ -14,10 +14,21 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 @router.get("/", response_model=List[ProjectRead])
 def read_projects(
     session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
+    page_no: int = 0
 ):
-    projects = session.exec(select(Project)).all()
+    pagination_limit = 3
+    projects = session.exec(select(Project).offset(page_no*pagination_limit).limit(pagination_limit))
     return projects
+
+@router.get("/get_project",response_model=List[ProjectRead])
+def read_single_project(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_user),
+    project_name: str = ""
+):
+    project = session.exec(select(Project).where(Project.name==project_name)).all()
+    return project
 
 # Admin required
 @router.post("/create", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
